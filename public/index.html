@@ -16,7 +16,7 @@
             <div class="header-content">
                 <div class="logo">
                     <div ><img src="./src/img/Azul.png" alt="Logo Neves Alves"class="logo-icon"></div>
-        
+                
                 </div>
                 
                 <nav class="nav desktop-nav">
@@ -37,15 +37,15 @@
     <section class="hero">
     <!-- Fundo em video-->
      <video autoplay muted loop playsinline class="hero-bg">
-		<source src="./src/img/video02.mp4" type="video/mp4">
-	</video>
+        <source src="./src/img/video02.mp4" type="video/mp4">
+    </video>
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
                     <h1>Transforme seu <span class="highlight">bem-estar</span> com <span class="highlight">cuidado especializado</span></h1>
                     <p>Especialista em bem-estar, oferecendo massagens relaxantes e terapêuticas com foco em alívio do estresse, dores musculares e melhoria da qualidade de vida.</p>
                     
-                   
+                    
 
                     <div class="hero-buttons">
                         <button class="btn btn-primary btn-lg" onclick="scrollToSection('appointment')">Agendar Consulta</button>
@@ -86,13 +86,27 @@
                         <div class="time-selection">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3>    Horários Disponíveis</h3>
+                                    <h3>    Disponibilidade</h3>
                                 </div>
+                                <!-- MODIFICAÇÃO COMEÇA AQUI -->
                                 <div class="card-content">
-                                    <div id="timeSlotsContainer">
-                                        <!-- Time slots will be populated by JavaScript -->
+
+                                    <!-- NOSSO NOVO SELETOR DE SERVIÇOS -->
+                                    <div id="service-selection-container">
+                                        <h4 class="step-subtitle">1. Escolha o Serviço</h4>
+                                        <!-- Botões de rádio serão injetados aqui pelo JS -->
                                     </div>
+
+                                    <!-- NOSSO CONTAINER DE HORÁRIOS (AGORA COMEÇA ESCONDIDO) -->
+                                    <div id="time-selection-wrapper" class="hidden">
+                                        <h4 class="step-subtitle">2. Escolha o Horário</h4>
+                                        <div id="timeSlotsContainer">
+                                            <!-- Time slots will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+
                                 </div>
+                                <!-- MODIFICAÇÃO TERMINA AQUI -->
                             </div>
                         </div>
 
@@ -105,7 +119,7 @@
                                     <div id="timeSelectionSummary">
                                         <div class="empty-state">
                                             <div class="empty-icon">📅</div>
-                                            <p>Selecione um horário disponível para continuar</p>
+                                            <p>Selecione um serviço e um horário para continuar</p>
                                         </div>
                                     </div>
                                 </div>

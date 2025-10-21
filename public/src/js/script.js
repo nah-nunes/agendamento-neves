@@ -55,15 +55,40 @@ const services = [
         duration: "45 min",
         category: "Terapêutica",
         icon: "🦶"
+    },
+    {
+        name:"Avaliação da Profissional",
+        description: "Ainda não sei bem qual o melhor no meu caso e gostaria de conversar e ter uma avaliação com a profissional",
+        price: "50",
+        duration: "20 min",
+        category: "Avaliação",
+        icon: "📰"
     }
+
 ];
 
+// --- NOVO: CONFIGURAÇÃO CENTRAL DE HORÁRIOS ---
+// Altere aqui para definir seus horários de trabalho
+const scheduleConfig = {
+    daysToShow: 7, // Quantos dias no futuro mostrar
+    // Dias da semana: 0 = Domingo, 1 = Segunda, 2 = Terça, etc.
+    // Domingo está ausente, então é um dia de folga.
+    workingHours: {
+        1: ["08:00", "10:00", "14:00", "16:00"], // Segunda
+        2: ["08:00", "09:30", "14:00", "15:30", "17:00"], // Terça
+        3: ["08:00", "10:00", "14:00", "16:00"], // Quarta
+        4: ["08:00", "09:30", "14:00", "15:30", "17:00"], // Quinta
+        5: ["08:00", "10:00", "14:00", "16:00"], // Sexta
+        6: ["08:00", "10:00", "12:00"] // Sábado
+    }
+};
+
 // --- ESTADO GLOBAL DO AGENDAMENTO ---
-// Armazena as seleções do usuário
 let appointmentState = {
     selectedService: null,
-    selectedDate: null, // Mudamos de 'Day' (dia da semana) para 'Date' (data real)
+    selectedDate: null,
     selectedTime: null,
+    dayOfWeek: null, // NOVO: para guardar o dia da semana
     clientName: null,
     clientPhone: null,
     clientMessage: null
@@ -71,6 +96,8 @@ let appointmentState = {
 
 // --- SELETORES DE ELEMENTOS (DOM) ---
 const servicesGrid = document.getElementById('servicesGrid');
+const serviceSelectionContainer = document.getElementById('service-selection-container');
+const timeSelectionWrapper = document.getElementById('time-selection-wrapper');
 const timeSlotsContainer = document.getElementById('timeSlotsContainer');
 const timeSelectionSummary = document.getElementById('timeSelectionSummary');
 const bookingSummary = document.getElementById('bookingSummary');
@@ -81,13 +108,13 @@ const whatsappBtn = document.getElementById('whatsappBtn');
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
 document.addEventListener('DOMContentLoaded', function() {
     renderServices();
-    renderFakeTimeSlots(); // ATUALIZADO: Usamos horários "fake" por enquanto
+    renderServiceSelectionRadios();
     setupEventListeners();
     setupPhoneMask();
     addScrollAnimations();
 });
 
-// --- RENDERIZAÇÃO DOS SERVIÇOS ---
+// --- RENDERIZAÇÃO DOS SERVIÇOS (VITRINE) ---
 function renderServices() {
     servicesGrid.innerHTML = services.map(service => `
         <div class="card service-card">
@@ -101,71 +128,116 @@ function renderServices() {
             <div class="card-content">
                 <p class="service-description">${service.description}</p>
                 <div class="service-details">
-                    <div class="service-duration">
-                        <span>⏰</span>
-                        <span>${service.duration}</span>
-                    </div>
-                    <div class="service-price">
-                        <span>💰</span>
-                        <span>R$ ${service.price}</span>
-                    </div>
+                    <div class="service-duration"><span>⏰</span><span>${service.duration}</span></div>
+                    <div class="service-price"><span>💰</span><span>R$ ${service.price}</span></div>
                 </div>
-                <button class="btn btn-primary" onclick="selectService('${service.name}')" style="width: 100%;">
-                    Agendar ${service.name}
-                </button>
+                <button class="btn btn-primary" onclick="scrollToSection('appointment')" style="width: 100%;">Agendar</button>
             </div>
         </div>
     `).join('');
 }
 
-// --- FUNÇÃO DE SELEÇÃO DE SERVIÇO (NOVA) ---
-// Chamada pelo 'onclick' do botão do serviço
-window.selectService = (serviceName) => {
-    appointmentState.selectedService = serviceName;
-    showToast(`Serviço selecionado: ${serviceName}`, 'info');
-    scrollToSection('appointment');
-    // No futuro, podemos recarregar os horários aqui
-};
+// --- RENDERIZA OS BOTÕES DE RÁDIO ---
+function renderServiceSelectionRadios() {
+    let servicesHtml = '<div class="radio-group">';
+    services.forEach((service, index) => {
+        const serviceId = `service-radio-${index}`;
+        servicesHtml += `
+            <div class="radio-option">
+                <input type="radio" id="${serviceId}" name="selected_service" value="${service.name}">
+                <label for="${serviceId}" class="radio-label">
+                    <strong>${service.name}</strong>
+                    <span>(${service.duration} - R$ ${service.price})</span>
+                </label>
+            </div>
+        `;
+    });
+    servicesHtml += '</div>';
+    serviceSelectionContainer.innerHTML += servicesHtml;
 
-// --- RENDERIZAÇÃO DOS HORÁRIOS (ATUALIZADO) ---
-// Esta função é TEMPORÁRIA. Ela simula horários reais.
-// O próximo passo será carregar isso da planilha.
-function renderFakeTimeSlots() {
-    timeSlotsContainer.innerHTML = ''; // Limpa
+    const radioButtons = document.querySelectorAll('input[name="selected_service"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', (event) => {
+            appointmentState.selectedService = event.target.value;
+            timeSelectionWrapper.classList.remove('hidden');
+            renderAvailableSlots(); // ATUALIZADO: Chama a nova função dinâmica
+            resetTimeSelectionSummary();
+        });
+    });
+}
 
-    // Horários de exemplo (com datas reais)
-    const horariosFalsos = [
-        { data: '2025-10-28', hora: '09:00' },
-        { data: '2025-10-28', hora: '10:00' },
-        { data: '2025-10-29', hora: '14:00' },
-        { data: '2025-10-29', hora: '15:00' },
-    ];
+// --- NOVO: FUNÇÕES AUXILIARES DE DATA ---
 
-    horariosFalsos.forEach(horario => {
-        const btn = document.createElement('button');
-        btn.className = 'time-slot'; // Usando sua classe CSS
-        btn.innerHTML = `<span>📅 ${horario.data}</span> <span>⏰ ${horario.hora}</span>`;
+// Formata um objeto Date para "DD/MM/YYYY"
+function formatDateToBrazilian(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Mês é base 0
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
 
-        // Lógica de clique movida para cá
-        btn.onclick = (event) => {
-            // 1. Verifica se um serviço foi selecionado
-            if (!appointmentState.selectedService) {
-                showToast('Por favor, selecione um serviço primeiro!', 'error');
-                scrollToSection('services');
-                return;
-            }
+// Pega o nome do dia da semana a partir de um objeto Date
+function getDayOfWeekName(date) {
+    const days = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    return days[date.getDay()];
+}
 
-            // 2. Atualiza o estado
-            appointmentState.selectedDate = horario.data;
-            appointmentState.selectedTime = horario.hora;
+// --- NOVO: GERA OS HORÁRIOS DINAMICAMENTE ---
+function generateAvailableSlots() {
+    const availableSlots = [];
+    const today = new Date();
 
-            // 3. Atualiza a UI (marca como selecionado)
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
+    for (let i = 0; i < scheduleConfig.daysToShow; i++) {
+        const currentDate = new Date();
+        currentDate.setDate(today.getDate() + i);
+
+        const dayOfWeek = currentDate.getDay(); // 0-6
+
+        // Verifica se é um dia de trabalho configurado
+        if (scheduleConfig.workingHours[dayOfWeek]) {
+            const dateFormatted = formatDateToBrazilian(currentDate);
+            const dayName = getDayOfWeekName(currentDate);
+
+            // Adiciona os horários para este dia
+            scheduleConfig.workingHours[dayOfWeek].forEach(time => {
+                availableSlots.push({
+                    date: dateFormatted,
+                    time: time,
+                    dayOfWeek: dayName
+                });
             });
+        }
+    }
+    return availableSlots;
+}
+
+// --- ATUALIZADO: RENDERIZA HORÁRIOS DISPONÍVEIS ---
+function renderAvailableSlots() {
+    timeSlotsContainer.innerHTML = '<!-- Carregando horários... -->';
+
+    const slots = generateAvailableSlots();
+    
+    if (slots.length === 0) {
+        timeSlotsContainer.innerHTML = '<p>Nenhum horário disponível nos próximos dias. Tente novamente mais tarde.</p>';
+        return;
+    }
+
+    timeSlotsContainer.innerHTML = '';
+    
+    slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.className = 'time-slot';
+        // ATUALIZADO: Mostra o dia da semana e a data formatada
+        btn.innerHTML = `<span>📅 ${slot.dayOfWeek}, ${slot.date}</span> <span>⏰ ${slot.time}</span>`;
+
+        btn.onclick = (event) => {
+            appointmentState.selectedDate = slot.date;
+            appointmentState.selectedTime = slot.time;
+            appointmentState.dayOfWeek = slot.dayOfWeek; // Guarda o dia da semana
+
+            document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
             event.currentTarget.classList.add('selected');
 
-            // 4. Mostra o resumo da Etapa 1
             showTimeSelectionSummary();
         };
         timeSlotsContainer.appendChild(btn);
@@ -184,7 +256,7 @@ function showTimeSelectionSummary() {
             <div class="detail-row">
                 <span>📅</span>
                 <span class="detail-label">Data:</span>
-                <span class="detail-value">${appointmentState.selectedDate}</span>
+                <span class="detail-value">${appointmentState.dayOfWeek}, ${appointmentState.selectedDate}</span>
             </div>
             <div class="detail-row">
                 <span>⏰</span>
@@ -200,32 +272,31 @@ function showTimeSelectionSummary() {
     `;
 }
 
-// --- NAVEGAÇÃO ENTRE ETAPAS ---
+function resetTimeSelectionSummary() {
+     timeSelectionSummary.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <p>Selecione um horário disponível para continuar</p>
+        </div>
+    `;
+}
 
-// (ETAPA 1 -> ETAPA 2)
+// --- NAVEGAÇÃO ENTRE ETAPAS ---
 window.proceedToContactForm = () => {
     showStep('contactStep');
     updateBookingSummary();
 }
-
-// (ETAPA 2 -> ETAPA 1)
 window.goBackToTimeSelection = () => {
     showStep('timeStep');
 }
-
-// Função principal de navegação
 function showStep(stepId) {
-    document.querySelectorAll('.appointment-step').forEach(step => {
-        step.classList.add('hidden');
-    });
-    const stepToShow = document.getElementById(stepId)
+    document.querySelectorAll('.appointment-step').forEach(step => step.classList.add('hidden'));
+    const stepToShow = document.getElementById(stepId);
     stepToShow.classList.remove('hidden');
-    
-    // Adiciona animação (do seu código original)
     stepToShow.classList.add('fade-in');
 }
 
-// --- ATUALIZAR RESUMO DA ETAPA 2 (ATUALIZADO) ---
+// --- ATUALIZAR RESUMO DA ETAPA 2 ---
 function updateBookingSummary() {
     if (appointmentState.selectedDate && appointmentState.selectedTime) {
         bookingSummary.innerHTML = `
@@ -236,7 +307,7 @@ function updateBookingSummary() {
             <div class="detail-row">
                 <span>📅</span>
                 <span class="detail-label">Data:</span>
-                <span class="detail-value">${appointmentState.selectedDate}</span>
+                <span class="detail-value">${appointmentState.dayOfWeek}, ${appointmentState.selectedDate}</span>
             </div>
             <div class="detail-row">
                 <span>⏰</span>
@@ -252,79 +323,62 @@ function updateBookingSummary() {
     }
 }
 
-// --- CONFIGURAÇÃO DE EVENTOS (ATUALIZADO COM API) ---
+// --- CONFIGURAÇÃO DE EVENTOS (CHAMADA API) ---
 function setupEventListeners() {
-    
-    // Evento de envio do formulário (ETAPA 2)
     contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault(); // Impede o recarregamento
-        
-        // 1. Coleta dados do formulário
+        e.preventDefault(); 
         appointmentState.clientName = document.getElementById('clientName').value;
         appointmentState.clientPhone = document.getElementById('clientPhone').value;
         appointmentState.clientMessage = document.getElementById('clientMessage').value;
         
-        // 2. Validação simples
         if (!appointmentState.clientName || !appointmentState.clientPhone) {
             showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
             return;
         }
         
-        // 3. Prepara dados para a API
         const dadosCompletos = {
             nome: appointmentState.clientName,
             telefone: appointmentState.clientPhone,
             observacoes: appointmentState.clientMessage,
-            data: appointmentState.selectedDate,
+            // ATUALIZADO: envia a data formatada
+            data: `${appointmentState.dayOfWeek}, ${appointmentState.selectedDate}`,
             hora: appointmentState.selectedTime,
             servico: appointmentState.selectedService
         };
 
-        // Feedback visual no botão
         const submitButton = contactForm.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         submitButton.innerText = 'Enviando...';
 
         try {
-            // 4. CHAMA A API (Netlify Function)
             const response = await fetch('/.netlify/functions/agendar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dadosCompletos),
             });
-
             const resultado = await response.json();
-
             if (response.ok) {
-                // 5. SUCESSO: Mostra a confirmação (ETAPA 3)
                 showConfirmation();
             } else {
-                // 6. ERRO: Mostra toast de erro
                 showToast(`Erro: ${resultado.mensagem || 'Tente novamente.'}`, 'error');
             }
-
         } catch (error) {
-            // 7. ERRO DE REDE
             console.error('Erro de rede:', error);
             showToast('Erro de conexão. Tente novamente.', 'error');
         } finally {
-            // 8. Reabilita o botão
             submitButton.disabled = false;
             submitButton.innerText = 'Finalizar Agendamento';
         }
     });
     
-    // Botão do WhatsApp (ETAPA 3)
     whatsappBtn.addEventListener('click', function() {
         sendWhatsApp();
     });
 }
 
-// --- MOSTRAR CONFIRMAÇÃO (ETAPA 3) (ATUALIZADO) ---
+// --- MOSTRAR CONFIRMAÇÃO (ETAPA 3) ---
 function showConfirmation() {
     showStep('confirmationStep');
-    
-    // ATUALIZADO: usa 'selectedDate'
     confirmationDetails.innerHTML = `
         <div class="detail-row">
             <span class="detail-label">Serviço:</span>
@@ -336,7 +390,7 @@ function showConfirmation() {
         </div>
         <div class="detail-row">
             <span class="detail-label">Data:</span>
-            <span class="detail-value">${appointmentState.selectedDate}</span> 
+            <span class="detail-value">${appointmentState.dayOfWeek}, ${appointmentState.selectedDate}</span> 
         </div>
         <div class="detail-row">
             <span class="detail-label">Horário:</span>
@@ -349,24 +403,20 @@ function showConfirmation() {
         </div>
         ` : ''}
     `;
-    
     showToast('Agendamento confirmado com sucesso!', 'success');
 }
 
-// --- ENVIAR MENSAGEM WHATSAPP (ATUALIZADO) ---
+// --- ENVIAR MENSAGEM WHATSAPP ---
 function sendWhatsApp() {
-    // ATUALIZADO: usa 'selectedDate' e 'selectedService'
     const message = `Olá! Gostaria de confirmar meu agendamento:
 
 ⭐ Serviço: ${appointmentState.selectedService}
 👤 Nome: ${appointmentState.clientName}
-📅 Data: ${appointmentState.selectedDate}
+📅 Data: ${appointmentState.dayOfWeek}, ${appointmentState.selectedDate}
 ⏰ Horário: ${appointmentState.selectedTime}
-
 ${appointmentState.clientMessage ? `📝 Observações: ${appointmentState.clientMessage}` : ''}
 
 Aguardo a confirmação. Obrigado(a)!`;
-    
     const whatsappUrl = `https://wa.me/5547988901715?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 }
@@ -374,40 +424,24 @@ Aguardo a confirmação. Obrigado(a)!`;
 // --- RESETAR AGENDAMENTO ---
 window.resetAppointment = () => {
     appointmentState = {
-        selectedService: null,
-        selectedDate: null,
-        selectedTime: null,
-        clientName: null,
-        clientPhone: null,
-        clientMessage: null
+        selectedService: null, selectedDate: null, selectedTime: null, dayOfWeek: null,
+        clientName: null, clientPhone: null, clientMessage: null
     };
-    
     contactForm.reset();
     showStep('timeStep');
-    
-    // Limpa o resumo da Etapa 1
-    timeSelectionSummary.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-icon">📅</div>
-            <p>Selecione um horário disponível para continuar</p>
-        </div>
-    `;
-    // Limpa os botões selecionados
-     document.querySelectorAll('.time-slot').forEach(slot => {
-        slot.classList.remove('selected');
-    });
-
+    const radioButtons = document.querySelectorAll('input[name="selected_service"]');
+    radioButtons.forEach(radio => radio.checked = false);
+    timeSelectionWrapper.classList.add('hidden');
+    resetTimeSelectionSummary();
+    document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('selected'));
     showToast('Pronto para um novo agendamento!', 'info');
 }
 
 // --- MÁSCARA DE TELEFONE ---
 function setupPhoneMask() {
     const phoneInput = document.getElementById('clientPhone');
-    
     phoneInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        value = value.substring(0, 11); // Limita a 11 dígitos (DDD + 9 + 8 dígitos)
-        
+        let value = e.target.value.replace(/\D/g, '').substring(0, 11);
         if (value.length >= 11) {
             value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
         } else if (value.length >= 7) {
@@ -415,71 +449,41 @@ function setupPhoneMask() {
         } else if (value.length >= 3) {
             value = value.replace(/(\d{2})(\d+)/, '($1) $2');
         }
-        
         e.target.value = value;
     });
 }
 
 // --- FUNÇÕES UTILITÁRIAS ---
-
-// Scroll suave (chamada pelo HTML)
 window.scrollToSection = (sectionId) => {
-    document.getElementById(sectionId).scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-    });
+    document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-
-// Abrir WhatsApp (chamada pelo HTML)
 window.openWhatsApp = (message = '') => {
     const defaultMessage = message || 'Olá! Gostaria de mais informações sobre os tratamentos.';
     const whatsappUrl = `https://wa.me/5547988901715?text=${encodeURIComponent(defaultMessage)}`;
     window.open(whatsappUrl, '_blank');
 }
-
-// Mostrar notificação (Toast)
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessage');
-    
-    const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️'
-    };
-    
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
     toastIcon.textContent = icons[type] || icons.success;
     toastMessage.textContent = message;
-    
     toast.classList.remove('success', 'error', 'info');
     toast.classList.add(type);
     toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 5000);
+    setTimeout(() => { toast.classList.remove('show'); }, 5000);
 }
 
-// --- ANIMAÇÕES DE SCROLL ---
+// --- ANIMAÇÕES E SCROLL ---
 function addScrollAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fade-in');
-            }
+            if (entry.isIntersecting) { entry.target.classList.add('fade-in'); }
         });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    document.querySelectorAll('.service-card, .contact-card, .cta-card').forEach(card => {
-        observer.observe(card);
-    });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.service-card, .contact-card, .cta-card').forEach(card => observer.observe(card));
 }
-
-// Scroll suave para links internos (do seu código original)
 document.addEventListener('click', function(e) {
     if (e.target.matches('a[href^="#"]')) {
         e.preventDefault();
