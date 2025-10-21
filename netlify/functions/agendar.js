@@ -13,14 +13,17 @@ exports.handler = async function (event, context) {
       };
     }
 
+ // 2. Autenticação com o Google
+    // Puxa o JSON INTEIRO da variável de ambiente e o "parseia"
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
-        client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        client_email: credentials.client_email,
+        private_key: credentials.private_key, // O JSON.parse já formatou a chave corretamente!
       },
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
-
     const sheets = google.sheets({ version: 'v4', auth });
 
     // Nova linha com 7 colunas (A até G)
