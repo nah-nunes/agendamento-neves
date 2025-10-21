@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neves Alves - Especialista em Bem-Estar</title>
+    <link rel="stylesheet" href="./src/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div ><img src="./src/img/Azul.png" alt="Logo Neves Alves"class="logo-icon"></div>
+        
+                </div>
+                
+                <nav class="nav desktop-nav">
+                    <a href="#services" class="nav-link">Serviços</a>
+                    <a href="#appointment" class="nav-link">Agendamento</a>
+                    <a href="#contact" class="nav-link">Contato</a>
+                    <button class="btn btn-primary" onclick="scrollToSection('appointment')">Agendar Agora</button>
+                </nav>
+
+                <div class="mobile-nav">
+                    <button class="btn btn-primary btn-sm" onclick="scrollToSection('appointment')">Agendar</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+    <!-- Fundo em video-->
+     <video autoplay muted loop playsinline class="hero-bg">
+		<source src="./src/img/video02.mp4" type="video/mp4">
+	</video>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Transforme seu <span class="highlight">bem-estar</span> com <span class="highlight">cuidado especializado</span></h1>
+                    <p>Especialista em bem-estar, oferecendo massagens relaxantes e terapêuticas com foco em alívio do estresse, dores musculares e melhoria da qualidade de vida.</p>
+                    
+                   
+
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary btn-lg" onclick="scrollToSection('appointment')">Agendar Consulta</button>
+                        <button class="btn btn-outline btn-lg" onclick="scrollToSection('services')">Ver Serviços</button>
+                    </div>
+                </div>
+
+               </div> 
+    </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossos Serviços</h2>
+                <p>Muitos tratamentos para seu bem-estar físico e mental</p>
+            </div>
+
+            <div class="services-grid" id="servicesGrid">
+              
+            </div>
+        </div>
+    </section>
+
+    <!-- Appointment Section -->
+    <section id="appointment" class="appointment">
+        <div class="container">
+            <div class="section-header">
+                <h2>Agende sua Sessão</h2>
+                <p>Escolha o melhor horário para seu tratamento de bem-estar</p>
+            </div>
+
+            <div class="appointment-container">
+                <!-- Step 1: Time Selection -->
+                <div class="appointment-step" id="timeStep">
+                    <div class="appointment-content">
+                        <div class="time-selection">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>    Horários Disponíveis</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div id="timeSlotsContainer">
+                                        <!-- Time slots will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="selection-summary">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3> Confirmar Horário</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div id="timeSelectionSummary">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📅</div>
+                                            <p>Selecione um horário disponível para continuar</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Contact Form -->
+                <div class="appointment-step hidden" id="contactStep">
+                    <div class="appointment-content">
+                        <div class="contact-form">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3> Seus Dados</h3>
+                                </div>
+                                <div class="card-content">
+                                    <form id="contactForm">
+                                        <div class="form-group">
+                                            <label for="clientName">Nome Completo *</label>
+                                            <input type="text" id="clientName" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="clientPhone">Telefone *</label>
+                                            <input type="tel" id="clientPhone" placeholder="(00) 00000-0000" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="clientMessage">Observações (opcional)</label>
+                                            <textarea id="clientMessage" rows="3" placeholder="Alguma informação adicional..."></textarea>
+                                        </div>
+                                        <div class="form-buttons">
+                                            <button type="button" class="btn btn-outline" onclick="goBackToTimeSelection()">Voltar</button>
+                                            <button type="submit" class="btn btn-primary">Finalizar Agendamento</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="booking-summary">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>📋 Resumo do Agendamento</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div id="bookingSummary">
+                                        <!-- Booking summary will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="appointment-step hidden" id="confirmationStep">
+                    <div class="confirmation-content">
+                        <div class="card confirmation-card">
+                            <div class="card-content">
+                                <div class="confirmation-icon">✅</div>
+                                <h3>Agendamento Confirmado!</h3>
+                                <p>Seu horário foi reservado com sucesso</p>
+                                
+                                <div class="confirmation-details" id="confirmationDetails">
+                                    <!-- Confirmation details will be populated by JavaScript -->
+                                </div>
+
+                                <div class="confirmation-actions">
+                                    <p>Entre em contato via WhatsApp para confirmar detalhes adicionais</p>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success" id="whatsappBtn">📱 Confirmar no WhatsApp</button>
+                                        <button class="btn btn-outline" onclick="resetAppointment()">Novo Agendamento</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Entre em Contato</h2>
+                <p>Estamos aqui para esclarecer suas dúvidas e agendar seu tratamento</p>
+            </div>
+
+            <div class="contact-grid">
+                <div class="contact-card whatsapp-card">
+                    <div class="contact-icon">📱</div>
+                    <h3>WhatsApp</h3>
+                    <p>Resposta rápida e agendamento instantâneo</p>
+                    <div class="contact-info">
+                        <strong>(47) 98890-1715</strong>
+                    </div>
+                    <button class="btn btn-success" onclick="openWhatsApp('')">📱 Conversar no WhatsApp</button>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">📞</div>
+                    <h3>Contato Direto</h3>
+                    <div class="contact-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Telefone:</span>
+                            <span>(47) 98890-1715</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span>nevesalves0104@gmail.com</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" onclick="window.location.href='mailto:nevesalves0104@gmail.com'">✉️ Enviar Email</button>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">📍</div>
+                    <h3>Localização</h3>
+                    <div class="contact-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Endereço:</span>
+                            <span>Rua das Flores, 123<br>Varginha/MG</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Horário:</span>
+                            <span>Segunda a Sexta: 8h às 18h<br>Sábado: 8h às 14h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-card">
+                <div class="card">
+                    <div class="card-content">
+                        <h3>Pronto para começar sua jornada de bem-estar?</h3>
+                        <p>Entre em contato conosco hoje mesmo e dê o primeiro passo em direção a uma vida mais saudável e equilibrada.</p>
+                        <div class="cta-buttons">
+                            <button class="btn btn-primary btn-lg" onclick="scrollToSection('appointment')">Agendar Agora</button>
+                            <button class="btn btn-outline btn-lg" onclick="openWhatsApp('')">📱 WhatsApp</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <div ><img src="./src/img/Azul.png" alt="Logo Neves Alves"class="logo-icon"></div>
+                        
+                    </div>
+                    <p>Transformando vidas através do toque terapêutico. Cuidando do seu bem-estar com técnicas especializadas e atenção personalizada.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contato</h4>
+                    <div class="footer-contact">
+                        <p>📞 (47) 98890-1715</p>
+                        <p>✉️ nevesalves0104@gmail.com</p>
+                        <p>📍 Rua das Flores, 123<br>Varginha/MG</p>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Horário de Funcionamento</h4>
+                    <div class="footer-hours">
+                        <div class="hour-item">
+                            <span>Segunda - Sexta:</span>
+                            <span>8h às 18h</span>
+                        </div>
+                        <div class="hour-item">
+                            <span>Sábado:</span>
+                            <span>8h às 14h</span>
+                        </div>
+                        <div class="hour-item">
+                            <span>Domingo:</span>
+                            <span>Fechado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>❤️ Feito com amor para seu bem-estar</p>
+                <p>© 2025 Neves Alves - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <div class="toast-icon" id="toastIcon">✅</div>
+            <div class="toast-message" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <script src="./src/js/script.js"></script>
+</body>
+</html>
