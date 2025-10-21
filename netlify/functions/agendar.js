@@ -41,7 +41,7 @@ exports.handler = async function (event, context) {
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       // Mude 'Pagina1' para o nome da sua aba
       // Mude o range para A:G para incluir a nova coluna
-      range: 'Pagina1!A:G', 
+      range: 'Folha1!A:G', 
       valueInputOption: 'USER_ENTERED',
       resource: {
         values: [novaLinha],
