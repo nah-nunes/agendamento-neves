@@ -10,6 +10,9 @@
     --blueLight: #6e8fbd;
     --blueMedium: #92aacd;
     --blueDark: #4d73a8;
+
+
+
     --blublue:#1e293b;
     --bege: #9c7966;
     --marrom:#e2d4ce;
@@ -19,6 +22,30 @@
     --fontMerriweather: "Merriweather", serif;
 
     --fontJosefin: "Josefin Sans", sans-serif;
+    /* Cores Principais */
+  --primary-color: #0d6efd; /* Um azul moderno e acessível */
+  --primary-color-light: #4ea8ff;
+  --primary-color-faded: rgba(13, 110, 253, 0.1); /* Para fundos de itens selecionados */
+  --success-color: #198754; /* Verde para confirmações */
+  
+  /* Cores de Texto */
+  --text-color: #212529; /* Preto suave para texto principal */
+  --text-light: #6c757d; /* Cinza para textos secundários */
+  
+  /* Cores de Fundo */
+  --background-color: #fff;
+  --background-light: #f8f9fa; /* Fundo de cards, etc. */
+
+  /* Cores de Borda */
+  --border-color: #dee2e6;
+  --border-color-light: #e9ecef;
+
+  /* Outras Variáveis de UI */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
 }
 body {
     font-family: var(--fontMerriweather);
@@ -289,10 +316,7 @@ backdrop-filter: blur(20px);
 
      
 }
-/*
-.hero-card {
-    position: relative;
-}
+
 
 .professional-card {
     background: rgba(255, 255, 255, 0.8);
@@ -343,7 +367,7 @@ backdrop-filter: blur(20px);
     font-size: 12px;
     color: #64748b;
 }
-*/
+
 @media (max-width: 1024px) {
     .hero-content {
         grid-template-columns: 1fr;
@@ -970,7 +994,7 @@ html {
 .radio-option .radio-label {
     display: block;
     padding: 16px;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--blueDark);
     border-radius: var(--border-radius-lg);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1003,4 +1027,145 @@ html {
 
 .radio-option input[type="radio"]:checked + .radio-label strong {
     color: var(--primary-color);
+}
+
+/* --- NOVOS ESTILOS GERAIS PARA O AGENDAMENTO --- */
+
+.step-subtitle {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#time-selection-wrapper {
+    margin-top: 24px;
+    transition: opacity 0.5s ease;
+}
+
+#time-selection-wrapper.hidden {
+    display: none;
+}
+
+/* --- 1. NOVO DESIGN DOS SERVIÇOS (RÁDIOS) --- */
+.radio-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .radio-group {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.service-radio-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: var(--background-light);
+}
+
+.service-radio-card:hover {
+    border-color: var(--blueDark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+}
+
+.service-radio-card .icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.service-radio-card .details strong {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.service-radio-card .details span {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.radio-option input[type="radio"]:checked + .service-radio-card {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color-faded);
+    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.15);
+}
+
+.radio-option input[type="radio"]:checked + .service-radio-card .details strong {
+    color: var(--primary-color);
+}
+
+
+/* --- 2. NOVO DESIGN DOS HORÁRIOS (POR DIA) --- */
+.day-group {
+    margin-bottom: 28px;
+}
+
+.day-group-header {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 12px;
+}
+
+.time-slot {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background-color: var(--background-color);
+}
+
+.time-slot:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* CORREÇÃO DO CONTRASTE */
+.time-slot.selected {
+    background-color: var(--primary-color);
+    color: #fff; /* Cor do texto branca para bom contraste em fundos escuros/coloridos */
+    border-color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Remove os ícones que estavam no JS antigo */
+.time-slot span {
+    display: none;
 }
